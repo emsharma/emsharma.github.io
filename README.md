@@ -5,7 +5,7 @@ This is the repository that contains source code for the [LLavaGuard website](ht
 If you find Nerfies useful for your work please cite:
 ```
 @article{abc
-  author    = {Sejoon Oh, Yiqiao, Megha Sharma, Ethan Kim, Gaurav Verma and Srijan Kumar},
+  author    = {Sejoon Oh, Yiqiao, Megha Sharma, Donghyun Kim, Gaurav Verma and Srijan Kumar},
   title     = {LLavaGuard:  Multimodal Safety Guardrails for Jailbreak Attacks on Multimodal Large Language Models},
   journal   = {COLM},
   year      = {2024},
