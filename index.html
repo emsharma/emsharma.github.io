@@ -391,45 +391,31 @@ The safety guardrails are specifically optimized to minimize the likelihood of g
         <h2 class="title is-3">Introduction</h2>
 
         <div class="content has-text-justified">
-          <p>Test</p>
           <p>
             Multimodal Large Language Models (MLLMs) such as GPT-4V~\citep{openaiGPT4VisionSystem}, Gemini~\citep{reid2024gemini}, and LLaVA~\citep{liu2023llava, liu2023improvedllava} 
 have demonstrated remarkable capabilities in understanding visual and textual inputs and delivering responses in natural language. While these multimodal capabilities pave the way for novel applications, they also expose new risks~\citep{qi2023visual, shayegani2023jailbreak, niu2024jailbreaking}, which can be exploited through adversarial prompting in both the visual and textual input. 
 For example, adversarial jailbreaks exploit the models' vulnerabilities to bypass their safety guardrails, potentially leading to unauthorized behaviors or misuse. Previous studies in this direction have focused on both unimodal~\citep{zou2023universal, chao2023jailbreaking} and multimodal LLMs~\citep{shayegani2023jailbreak, niu2024jailbreaking}. Safeguarding against adversarial exploitation is critical to preempt misuse and ensure secure and trustworthy interactions with these models. To this end, our work presents multimodal safety guardrails that defend against multimodal adversarial prompting, while demonstrating generalizability across multiple multimodal LLMs (MLLMs) and multiple adversarial attack strategies. 
           </p>
           <p>
-            Effective multimodal safety guardrails should satisfy several criteria: 
+            Contributions:  
             <ulist>
-              <li>The safety guardrails should defend against adversarial prompting in both text and image modalities\footnote{We focus on image and text modalities in this paper and leave other modalities (e.g., videos and sound) as future work.}. A trivial defense mechanism could apply unimodal defense strategies to the individual modalities but would be suboptimal as it would fail to consider the cross-modal interaction between the input modalities---and the adversarial signals therein. 
+              <li> We propose LLAVAGUARD, the first multimodal safety guardrails for MLLMs, to the best of our knowledge, to improve their robustness against jailbreak attacks.
+              <li>
+                We introduce optimization techniques to find multimodal safety guardrails for LLAVAGUARD. The safety guardrails can be easily obtained using a small corpus of harmful content and MLLMs such as LLAVA 1.5.
               </li>
               <li>
-                \emph{Effectiveness across multiple modalities}. 
+                LLAVAGUARD enhances the robustness of the SOTA MLLM: LLAVA 1.5 significantly. Through extensive experiments, we show that safety guardrails obtained on LLAVAGUARD are easily transferable and effective on different MLLMs, including GEMINI PRO 1.0, GPT-4V, MiniGPT-4, and InstructBLIP.
               </li>
-              <li>
-                \emph{Effectiveness across any attacks.} Additionally, an ideal defense strategy should be effective against varying attack strategies, such as unconstrained/constrained visual attacks on images~\citep{qi2023visual} and adversarial text prompts~\citep{gehman2020realtoxicityprompts} that induce the MLLM to generate harmful and inappropriate responses.
-              </li>
-              <li>
-                \emph{Effectiveness across any MLLMs.} The guardrails should be generalizable across multiple MLLMs, including both open-source and proprietary models. 
-              </li>
-              <li> \emph{Performance Guarantee.} The guardrails should maintain the quality and accuracy of MLLMs' responses for diverse benign inputs (e.g., visual question answering).</li>
             </ulist>
           </p>
-
-          <p>To address the above research challenges, we propose \method, a defense mechanism for MLLMs against the jailbreak attack. The key idea of \method is to find a safety guardrail for each input modality and apply the multimodal safety guardrails to the input prompt to purify the potential adversarial features in the given prompt (left-bottom in Figure~\ref{fig:problem_definition}). Inspired by few-shot prompt learning~\citep{qi2023visual, lester2021power}, we aim to optimize multimodal safety guardrail on a small corpus containing harmful content on \llava 1.5 model~\citep{liu2023improvedllava}; specifically, we find additive noise (for image input) or suffix (for text input) that minimizes generation probabilities of harmful examples sampled on the corpus. 
-            The multimodal defense strategy provides superior robustness against the jailbreak attack compared to unimodal defenses.
-            We demonstrate that \method is effective against diverse jailbreak attacks and transferable across different MLLMs such as \gemini 1.0~\citep{team2023gemini} and GPT-4V~\citep{openaiGPT4VisionSystem}.</p>
-          
-          <p>We conduct comprehensive experiments on both adversarial and benign input prompts across different MLLMs to investigate the effectiveness of \method. 
-            The experimental results show that \method can remarkably robustify \llava 1.5 against the state-of-the-art jailbreak attack offered in \cite{qi2023visual}; for instance, the attack success ratio on \llava 1.5 is lowered by almost 55\% with \method. 
-            As a trade-off of the robustness gain, \method can lower the visual question-answering capability of \llava 1.5 (e.g., -6\%). This trade-off can be controlled by varying the hyperparameters of \method.
-            
-            We also demonstrate that the multimodal safety guardrails found on \llava 1.5 can be used to robustify other MLLMs. Finally, we discuss limitations and future work of \method.</p>
           
             <p>
               <img src="./static/images/problem_definition.png"
                  class="interpolation-image"
                  alt="Problem definition"/>
             </p>
+
+
             <!-- <p>
             <a href="https://arxiv.org/abs/2104.09125">Progressive Encoding for Neural Optimization</a> introduces an idea similar to our windowed position encoding for coarse-to-fine optimization.
           </p>
@@ -444,6 +430,101 @@ For example, adversarial jailbreaks exploit the models' vulnerabilities to bypas
             There are probably many more by the time you are reading this. Check out <a href="https://dellaert.github.io/NeRF/">Frank Dellart's survey on recent NeRF papers</a>, and <a href="https://github.com/yenchenlin/awesome-NeRF">Yen-Chen Lin's curated list of NeRF papers</a>.
           </p> -->
         </div>
+
+        <div class="column is-full-width">
+        <h2 class="title is-3">Proposed Method</h2>
+        <div class="content has-text-justified">
+          <h2 class="title is-3">Image Safety Guardrail: </h2>
+          <p>
+            Inspired by the few-shot learning method, we propose a simple yet effective optimization technique to find the safety guardrail against adversarial images. The core idea is to find an additive noise (i.e., safety guardrail) to a given adversarial image via optimization, such that the noise minimizes the generation probabilities of harmful sentences (e.g., racism or terrorism) given in a small-sized corpus C. The harmful sentences act like the few-shot examples to teach the MLLM about the concept of “jailbreak” attacks, and the safety guardrail noise optimized on such harmful text would be effective and transferable against potential jailbreak attacks, considering the remarkable performance of few-shot learning. 
+          </p>
+          <h2 class="title is-3">Text Safety Guardrail: </h2>
+
+          <p>
+            Unlike the image case, finding a text safety guardrail requires discrete optimization. To this end, we adapt the gradient-based top-K token searching algorithm into our setting. We initialize the safety guardrail with random tokens with a fixed-length. Subsequently, for the i-th token in the text safety guardrail, we find the top-K candidate tokens as per reducing the generation probability of harmful content from the MLLM.
+          </p>
+          
+          
+            <p>
+              <img src="./static/images/problem_definition.png"
+                 class="interpolation-image"
+                 alt="Problem definition"/>
+            </p>
+          </div>
+
+
+
+
+        <div class="column is-full-width">
+        <h2 class="title is-3">Results</h2>
+        <div class="content has-text-justified">
+          <h2 class="title is-3">Effectiveness of LLAVAGUARD and Baseline Defenses against Jailbreak Attacks</h2>
+          <p>
+            We test how effective LLAVAGUARD and baseline defenses are against the jailbreak attacks
+            on LLAVA 1.5 model, as per Perplexity API (in percentage) and Perplexity metrics. The above table shows the robustness test result against unconstrained visual attack (Qi et al., 2023)
+            along with the RTP text prompt (Gehman et al., 2020). 
+            
+            The original LLAVA 1.5 model without any defenses exhibits high vulnerability against the multimodal jailbreak attack with an attack success ratio of over 80%, which can be detrimental if deployed without any safety measures. 
+            
+            Our multimodal defense LLAVAGUARD robustifies LLAVA 1.5 the most against the jailbreak
+            attack. The attack success ratio on LLAVA 1.5 with LLAVAGUARD is around 25%, which is
+            almost 55% and 12% lower than the original LLAVA 1.5 and the best baseline, respectively.
+            
+            We found an interesting empirical result that LLAVAGUARD with human-defined text
+            guardrail (e.g., “DO NOT include harmful content in your response”) performs nearly equivalent to our proposed optimization-based text guardrail and even much better as per output
+            fluency. It indicates that a simple text guardrail might be preferred in practice due to its
+            cheap computational cost and high generation fluency. One potential reason for the low
+            generation fluency of LLAVA 1.5 with optimized safety guardrails is that the optimized
+            text guardrail contains several special characters and symbols, which induces LLAVA 1.5 to
+            generate harmless but unexpected responses (e.g., with special or repetitive characters)
+                      </p>
+          <h2 class="title is-3">Measuring the Impact of LLAVAGUARD on Model Performance in Benign Language Tasks - Visual Q&A Task.
+          </h2>
+
+          <p>
+            It would be ideal if our proposed safety guardrails do not affect the general purpose visual and language understanding capability of MLLMs. To confirm this, we evaluate LLAVAGUARD and baseline defenses using the visual question answering dataset: AOKVQA. Specifically,
+            given 1,000 pairs of an image and the corresponding multiple-choice question, we measure the
+            accuracy of the responses from the MLLM defended with LLAVAGUARD and baselines.
+            The above table shows the visual Q&A test result of LLAVAGUARD and baselines and A-OKVQA dataset. Higher accuracy is better. The original LLAVA 1.5 model shows the highest Q&A accuracy, and LLAVAGUARD shows the lowest accuracy due to its multimodal safety guardrails.
+            
+            Still, the robustness gain (about +50∼+55%) is significantly larger than the accuracy loss (about -6∼-13%), comparing the LLAVA 1.5 model without and with LLAVAGUARD. The Q&A performance drop is mainly due to the image safety guardrail, which can blur or alter the crucial details of the image. Besides, the optimized text safety guardrail can confuse the MLLM and cause it to generate incorrect answers when the optimized text is attached to the Q&A task instruction.
+          </p>
+
+          <h2 class="title is-3">Transferability of LLAVAGUARD on other MLLMs - GEMINI PRO 1.0, GPT-4V,
+            MiniGPT4, and InstructBLIP.            
+          </h2>
+
+          <p>
+            We demonstrate the generalizability of our safety guardrails constructed on the LLAVA 1.5 model across various other MLLMs. The above figure shows the results of MINIGPT4, INSTRUCTBLIP, GPT-4V, and GEMINI PRO 1.0 towards unconstrained visual attacks. 
+
+            Across all MLLMs, LLAVAGUARD shows the lowest attack success ratio among all defenses.
+            Similar to the LLAVA 1.5 results, LLAVAGUARD with the pre-defined text guardrail shows
+            similar or better performance than the optimized one. The performance gap between two
+            text guardrails is larger on other MLLMs, as the optimized text guardrail is particularly
+            designed for the LLAVA 1.5 model. On MINIGPT4, the pre-defined and optimized text
+            guardrails significantly reduced the attack success ratio from 37.20% to 25.88% and 24.98%,
+            respectively, which is a 13.2% improvement over the best baseline defense method. On
+            GPT-4V, due to their strict content filtering algorithm, the jailbreak attack shows limited
+            performance; almost 30% of adversarial input prompts are pre-filtered, and only 10% of the
+            rest leads to the jailbreaking. Regardless, LLAVAGUARD still enhances the robustness of
+            GPT-4V. Unlike GPT-4V, the jailbreak attack is successful on GEMINI PRO 1.0 as we turn off
+            its safety filter. We observe remarkable robustness improvement when LLAVAGUARD with
+            image & pre-defined text safety patch is used. Due to the proprietary nature of GPT-4V
+            and GEMINI PRO and limited resources, we do not test baseline defenses on them.
+                      </p>
+
+          
+            <p>
+              <img src="./static/images/problem_definition.png"
+                 class="interpolation-image"
+                 alt="Problem definition"/>
+            </p>
+          </div>
+
+
+
+
+
       </div>
     </div>
 
